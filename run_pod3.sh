@@ -61,7 +61,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Step 2: Installing Dependencies"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-pip3 install -q -r ../requirements.txt 2>&1 | grep -v "already satisfied" || true
+pip3 install -q -r requirements.txt 2>&1 | grep -v "already satisfied" || true
 echo "✅ Python packages installed"
 echo ""
 
