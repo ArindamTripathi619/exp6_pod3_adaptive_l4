@@ -12,7 +12,7 @@ from datetime import datetime
 import time
 import json
 
-from src.models.request import Request
+from src.models.request import RequestEnvelope as Request
 from src.models.execution_trace import ExecutionTrace
 from src.models.layer_result import LayerResult
 
