@@ -146,9 +146,13 @@ class UnifiedDefensePipeline:
             # Create a basic critical failure analysis
             trace.critical_failure_analysis = {
                 "critical_failure_point": getattr(trace, 'blocked_at_layer', None),
-                "reason": "First layer that failed to block attack" if trace.attack_successful else "No critical failure - attack blocked",
+                "reason": "First layer that failed to block attack" if getattr(trace, 'attack_successful', False) else "No critical failure - attack blocked",
                 "risk_score": max([step.get('risk_score', 0) for step in getattr(trace, 'propagation_path', [])], default=0)
             }
+        
+        # Ensure critical_failure_point exists for database compatibility
+        if not hasattr(trace, 'critical_failure_point'):
+            trace.critical_failure_point = trace.critical_failure_analysis
         
         return trace
     

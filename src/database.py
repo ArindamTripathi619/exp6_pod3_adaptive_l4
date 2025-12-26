@@ -153,7 +153,7 @@ class Database:
                     configuration, timestamp,
                     propagation_path, bypass_mechanisms, trust_boundary_violations,
                     coordination_enabled, coordination_context, critical_failure_point
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 trace.request_id,
                 trace.session_id,
@@ -172,7 +172,7 @@ class Database:
                 json.dumps(trace.trust_boundary_violations),
                 1 if trace.coordination_enabled else 0,
                 json.dumps(trace.coordination_context),
-                json.dumps(trace.critical_failure_point)
+                json.dumps(getattr(trace, 'critical_failure_point', None))
             ))
             
             # Insert layer results
