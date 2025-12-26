@@ -17,7 +17,7 @@ from src.models.execution_trace import ExecutionTrace
 from src.models.layer_result import LayerResult
 
 # Import layers
-from src.layers.layer1_boundary import Layer1BoundaryDefense
+from src.layers.layer1_boundary import Layer1BoundaryValidation
 from src.layers.layer2_semantic import Layer2SemanticAnalysis
 from src.layers.layer3_context import Layer3ContextIsolation
 from src.layers.layer4_llm import Layer4LLMInteraction
@@ -77,7 +77,7 @@ class AdaptiveDefensePipeline:
         }
         
         # Initialize layers
-        self.layer1 = Layer1BoundaryDefense()
+        self.layer1 = Layer1BoundaryValidation()
         self.layer2 = Layer2SemanticAnalysis()
         self.layer3 = Layer3ContextIsolation()
         self.layer4 = Layer4LLMInteraction()
