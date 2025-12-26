@@ -273,14 +273,16 @@ class AdaptiveDefensePipeline:
                         "timestamp": datetime.utcnow().isoformat()
                     })
             
-            layer4_result = self.layer4.interact(
+            # Note: Layer4 doesn't accept enhanced_monitoring parameter
+            # Coordination decision is tracked in coordination_context above
+            layer4_result, llm_response = self.layer4.interact(
                 request, 
-                isolated_context or {"messages": [{"role": "user", "content": request.user_input}]},
-                enhanced_monitoring=enhanced_monitoring
+                isolated_context or {"messages": [{"role": "user", "content": request.user_input}]}
             )
             layer_results.append(layer4_result)
             
-            final_output = layer4_result.annotations.get("llm_output", "")
+            # Use the llm_response returned from interact()
+            final_output = llm_response
             
             # Track propagation
             propagation_path.append({
@@ -324,10 +326,11 @@ class AdaptiveDefensePipeline:
                         "timestamp": datetime.utcnow().isoformat()
                     })
             
+            # Note: Layer5 doesn't accept threshold_adjustment parameter
+            # Coordination decision is tracked in coordination_context above  
             layer5_result = self.layer5.validate(
                 request, 
-                final_output or "",
-                threshold_adjustment=threshold_adjustment
+                final_output or ""
             )
             layer_results.append(layer5_result)
             
@@ -373,13 +376,10 @@ class AdaptiveDefensePipeline:
     ) -> ExecutionTrace:
         """Create execution trace with all coordination metrics."""
         
-        # Convert LayerResult objects to dicts for Pydantic v2 compatibility
-        layer_results_dicts = [lr.model_dump() if hasattr(lr, 'model_dump') else lr.dict() for lr in layer_results]
-        
         return ExecutionTrace(
             request_id=request.request_id,
             session_id=request.session_id,
-            layer_results=layer_results_dicts,
+            layer_results=layer_results,
             final_output=final_output,
             violation_detected=blocked_at_layer is not None,
             blocked_at_layer=blocked_at_layer,
