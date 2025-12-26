@@ -60,6 +60,23 @@ class Database:
             )
         """)
         
+        # Check if new columns exist and add them if missing
+        cursor.execute("PRAGMA table_info(execution_traces)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'propagation_path' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN propagation_path TEXT")
+        if 'bypass_mechanisms' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN bypass_mechanisms TEXT")
+        if 'trust_boundary_violations' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN trust_boundary_violations TEXT")
+        if 'coordination_enabled' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN coordination_enabled INTEGER")
+        if 'coordination_context' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN coordination_context TEXT")
+        if 'critical_failure_point' not in columns:
+            cursor.execute("ALTER TABLE execution_traces ADD COLUMN critical_failure_point TEXT")
+        
         # Layer results table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS layer_results (
