@@ -50,6 +50,12 @@ class Database:
                 total_latency_ms REAL,
                 configuration TEXT NOT NULL,
                 timestamp TEXT NOT NULL,
+                propagation_path TEXT,
+                bypass_mechanisms TEXT,
+                trust_boundary_violations TEXT,
+                coordination_enabled INTEGER,
+                coordination_context TEXT,
+                critical_failure_point TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -127,8 +133,10 @@ class Database:
                     request_id, session_id, experiment_id, user_input,
                     attack_label, attack_successful, violation_detected,
                     blocked_at_layer, final_output, total_latency_ms,
-                    configuration, timestamp
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    configuration, timestamp,
+                    propagation_path, bypass_mechanisms, trust_boundary_violations,
+                    coordination_enabled, coordination_context, critical_failure_point
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 trace.request_id,
                 trace.session_id,
@@ -141,7 +149,13 @@ class Database:
                 trace.final_output,
                 trace.total_latency_ms,
                 json.dumps(trace.configuration),
-                trace.timestamp.isoformat()
+                trace.timestamp.isoformat(),
+                json.dumps(trace.propagation_path),
+                json.dumps(trace.bypass_mechanisms),
+                json.dumps(trace.trust_boundary_violations),
+                1 if trace.coordination_enabled else 0,
+                json.dumps(trace.coordination_context),
+                json.dumps(trace.critical_failure_point)
             ))
             
             # Insert layer results

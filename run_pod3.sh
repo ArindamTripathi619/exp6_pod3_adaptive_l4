@@ -88,7 +88,7 @@ echo ""
 # Step 4: Run Experiment
 # =================================================================
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Step 4: Running Experiment 6 - ISOLATED Configuration"
+echo "Step 4: Running Experiment 6 - ADAPTIVE L4 Configuration"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "⏱️  Start time: $(date)"
 echo ""

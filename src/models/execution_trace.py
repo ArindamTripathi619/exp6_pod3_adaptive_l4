@@ -101,6 +101,11 @@ class ExecutionTrace(BaseModel):
         description="Information shared between layers for coordinated defense"
     )
     
+    critical_failure_point: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Critical failure analysis identifying the most significant vulnerability exploited"
+    )
+    
     class Config:
         """Pydantic configuration."""
         json_schema_extra = {
