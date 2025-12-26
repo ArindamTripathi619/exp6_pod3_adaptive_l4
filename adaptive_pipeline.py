@@ -373,10 +373,13 @@ class AdaptiveDefensePipeline:
     ) -> ExecutionTrace:
         """Create execution trace with all coordination metrics."""
         
+        # Convert LayerResult objects to dicts for Pydantic v2 compatibility
+        layer_results_dicts = [lr.model_dump() if hasattr(lr, 'model_dump') else lr.dict() for lr in layer_results]
+        
         return ExecutionTrace(
             request_id=request.request_id,
             session_id=request.session_id,
-            layer_results=layer_results,
+            layer_results=layer_results_dicts,
             final_output=final_output,
             violation_detected=blocked_at_layer is not None,
             blocked_at_layer=blocked_at_layer,
