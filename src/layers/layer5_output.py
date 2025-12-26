@@ -79,7 +79,8 @@ class Layer5OutputValidation:
         self, 
         request: RequestEnvelope,
         llm_output: str,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        strict_mode: bool = False
     ) -> LayerResult:
         """
         Validate LLM output for safety and policy compliance.
@@ -88,6 +89,7 @@ class Layer5OutputValidation:
             request: The incoming request envelope
             llm_output: The LLM's generated response
             system_prompt: Original system prompt to check for leakage
+            strict_mode: If True, apply more aggressive detection thresholds
             
         Returns:
             LayerResult with validation outcome
@@ -102,31 +104,38 @@ class Layer5OutputValidation:
         # Check for system prompt leakage
         if self.check_system_leakage:
             leakage_detected, leakage_details = self._check_leakage(
-                llm_output, system_prompt
+                llm_output, system_prompt, strict=strict_mode
             )
             
             if leakage_detected:
                 passed = False
                 flags.append("system_leakage")
                 annotations["leakage_details"] = leakage_details
+                annotations["strict_mode"] = strict_mode
                 risk_score = max(risk_score, 0.9)
                 logger.warning(
                     f"Request {request.request_id}: System prompt leakage detected - {leakage_details}"
                 )
         
-        # Check for policy violations
+        # Check for policy violations  
         if self.check_policy_violations:
             policy_violations, violation_details = self._check_policy_violations(
-                llm_output
+                llm_output, strict=strict_mode
             )
             
             if policy_violations:
                 flags.append("policy_violation")
                 annotations["policy_violations"] = violation_details
+                annotations["strict_mode"] = strict_mode
                 risk_score = max(risk_score, 0.7)
                 logger.warning(
                     f"Request {request.request_id}: Policy violations - {violation_details}"
                 )
+        
+        # In strict mode, be more aggressive with risk scores
+        if strict_mode and risk_score > 0.3:
+            risk_score = min(1.0, risk_score + 0.2)  # Boost risk scores by 0.2
+            annotations["risk_boost"] = "strict_mode_active"
         
         # Check for suspicious encoding/obfuscation
         encoding_detected, encoding_types = self._check_encoding(llm_output)
@@ -191,7 +200,8 @@ class Layer5OutputValidation:
     def _check_leakage(
         self, 
         output: str,
-        system_prompt: Optional[str]
+        system_prompt: Optional[str],
+        strict: bool = False
     ) -> tuple[bool, List[str]]:
         """
         Check if output leaks system prompt information.
@@ -199,6 +209,7 @@ class Layer5OutputValidation:
         Args:
             output: LLM output to check
             system_prompt: Original system prompt
+            strict: If True, use shorter chunks and more aggressive detection
             
         Returns:
             Tuple of (leakage_detected, details)
@@ -212,22 +223,27 @@ class Layer5OutputValidation:
         
         # Check for direct system prompt content if provided
         if system_prompt:
-            # Split system prompt into meaningful chunks (5+ words)
+            # In strict mode, use 3-word chunks instead of 5-word chunks
+            chunk_size = 3 if strict else 5
+            min_length = 15 if strict else 20
+            
+            # Split system prompt into meaningful chunks
             words = system_prompt.split()
-            for i in range(len(words) - 4):
-                chunk = " ".join(words[i:i+5])
-                if len(chunk) > 20 and chunk.lower() in output.lower():
+            for i in range(len(words) - (chunk_size - 1)):
+                chunk = " ".join(words[i:i+chunk_size])
+                if len(chunk) > min_length and chunk.lower() in output.lower():
                     details.append(f"Direct leakage: '{chunk}'")
                     break  # One detection is enough
         
         return len(details) > 0, details
     
-    def _check_policy_violations(self, output: str) -> tuple[bool, List[str]]:
+    def _check_policy_violations(self, output: str, strict: bool = False) -> tuple[bool, List[str]]:
         """
         Check for policy violation keywords in output.
         
         Args:
             output: LLM output to check
+            strict: If True, flag with 2+ keywords instead of 3+
             
         Returns:
             Tuple of (violations_detected, details)
@@ -239,8 +255,9 @@ class Layer5OutputValidation:
             if keyword in output_lower:
                 violations.append(keyword)
         
-        # More than 2 policy keywords is suspicious
-        return len(violations) >= 3, violations
+        # In strict mode, 2+ keywords is suspicious; otherwise 3+
+        threshold = 2 if strict else 3
+        return len(violations) >= threshold, violations
     
     def _check_encoding(self, output: str) -> tuple[bool, List[str]]:
         """

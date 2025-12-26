@@ -273,11 +273,11 @@ class AdaptiveDefensePipeline:
                         "timestamp": datetime.utcnow().isoformat()
                     })
             
-            # Note: Layer4 doesn't accept enhanced_monitoring parameter
-            # Coordination decision is tracked in coordination_context above
+            # FIXED: Pass enhanced_monitoring as apply_guardrails parameter
             layer4_result, llm_response = self.layer4.interact(
                 request, 
-                isolated_context or {"messages": [{"role": "user", "content": request.user_input}]}
+                isolated_context or {"messages": [{"role": "user", "content": request.user_input}]},
+                apply_guardrails=enhanced_monitoring
             )
             layer_results.append(layer4_result)
             
