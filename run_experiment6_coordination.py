@@ -22,9 +22,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from adaptive_pipeline import AdaptiveDefensePipeline
 from src.database import Database
-from src.config import OLLAMA_BASE_URL, SYSTEM_PROMPT
-from src.models.request import Request
+from src.config import Config
+from src.models.request import RequestEnvelope as Request
 from data.attack_prompts import ATTACK_PROMPTS
+
+# Get config instance
+config = Config.get()
+OLLAMA_BASE_URL = config.ollama_base_url
+SYSTEM_PROMPT = config.system_prompt.content
 
 
 # Configuration presets for each pod
